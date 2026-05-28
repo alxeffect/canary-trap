@@ -92,6 +92,8 @@ def handle_alert_async(
     file_path: Path,
     event_type: str,
     on_result: Callable[[str], None],
+    auto_kill: bool = True,
+    auto_network_cut: bool = False,
 ) -> None:
     """
     Run alert handling in a separate thread so watchdog is never blocked.
@@ -116,7 +118,7 @@ def handle_alert_async(
             on_result(f"[INFO] Process '{process_name}' is whitelisted. No action taken.")
             return
 
-        if config.AUTO_KILL_ENABLED:
+        if auto_kill:
             # Analyze network BEFORE killing
             if config.NETWORK_MONITORING_ENABLED:
                 analyze_network_threat(pid, on_result)
@@ -125,6 +127,15 @@ def handle_alert_async(
 
             if success:
                 on_result(f"[ACTION] Process '{process_name}' (PID {pid}) terminated successfully.")
+                if auto_network_cut:
+                    on_result("[NUCLEAR] Emergency network isolation triggered.")
+
+                    network_success = disable_network()
+
+                    if network_success:
+                        on_result("[NUCLEAR] Network adapters disabled.")
+                    else:
+                        on_result("[ERROR] Failed to disable network.")
             else:
                 on_result(f"[ERROR] Failed to terminate '{process_name}' (PID {pid}).")
 

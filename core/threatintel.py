@@ -37,9 +37,20 @@ def get_all_suspicious_connections() -> List[str]:
 
             connections = proc.connections(kind="inet")
             for conn in connections:
-                if conn.raddr and conn.raddr.ip != "127.0.0.1":
-                    if conn.raddr.ip not in suspicious_ips:
-                        suspicious_ips.append(conn.raddr.ip)
+                if conn.raddr:
+                    ip = conn.raddr.ip
+
+                    # Skip localhost and private/local networks
+                    if (
+                            ip.startswith("127.")
+                            or ip.startswith("192.168.")
+                            or ip.startswith("10.")
+                            or ip.startswith("172.")
+                    ):
+                        continue
+
+                    if ip not in suspicious_ips:
+                        suspicious_ips.append(ip)
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
     return suspicious_ips

@@ -174,3 +174,15 @@ VERBOSE_PROCESS_LOGGING = False
 
 APP_NAME = "Canary-Trap"
 VERSION = "1.0.0"
+
+# =========================================================
+# RESPONSE MODES
+# =========================================================
+
+RESPONSE_MODES = [
+    "Detection Only",
+    "Kill Process",
+    "Nuclear Mode",
+]
+
+DEFAULT_RESPONSE_MODE = "Kill Process"
