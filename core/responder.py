@@ -7,6 +7,7 @@ from typing import Callable, Optional, Tuple
 
 import psutil
 import config
+from core.threatintel import get_process_connections, query_ip_intel, get_all_suspicious_connections
 
 
 def find_process_using_file(target_file: Path) -> Optional[Tuple[int, str]]:
@@ -53,6 +54,32 @@ def kill_process(pid: int) -> bool:
         return False
 
 
+def analyze_network_threat(pid: int, on_result: Callable[[str], None]) -> None:
+    if not config.NETWORK_MONITORING_ENABLED:
+        return
+
+    # Try specific process first
+    remote_ips = get_process_connections(pid)
+
+    # If no IPs for that process, check all suspicious connections in system
+    if not remote_ips:
+        on_result("[INFO] Specific process has no network. Scanning system for suspicious connections...")
+        remote_ips = get_all_suspicious_connections()
+
+    if not remote_ips:
+        on_result("[NETWORK] No suspicious network connections detected in system.")
+        return
+
+    # Limit to first 3 IPs to not spam the API
+    for ip in remote_ips[:3]:
+        on_result(f"[NETWORK] Analyzing IP: {ip}")
+        intel = query_ip_intel(ip)
+        if intel and intel.get("status") == "success":
+            country = intel.get("country", "N/A")
+            isp = intel.get("isp", "N/A")
+            on_result(f"  ↳ Alert: IP {ip} originates from {country} (ISP: {isp})")
+
+
 def handle_alert_async(
     file_path: Path,
     event_type: str,
@@ -60,12 +87,15 @@ def handle_alert_async(
 ) -> None:
     """
     Run alert handling in a separate thread so watchdog is never blocked.
+    Foreground PID is captured immediately (before thread starts)
+    to ensure we get the correct process while it's still active.
     """
+
+    # Capture foreground process immediately — before threading delay
+    process_info = find_process_using_file(file_path)
 
     def _task() -> None:
         on_result(f"[ALERT] {event_type.upper()} detected on: {file_path.name}")
-
-        process_info = find_process_using_file(file_path)
 
         if not process_info:
             on_result("[INFO] Could not identify responsible process.")
@@ -79,7 +109,12 @@ def handle_alert_async(
             return
 
         if config.AUTO_KILL_ENABLED:
+            # Analyze network BEFORE killing
+            if config.NETWORK_MONITORING_ENABLED:
+                analyze_network_threat(pid, on_result)
+
             success = kill_process(pid)
+
             if success:
                 on_result(f"[ACTION] Process '{process_name}' (PID {pid}) terminated successfully.")
             else:

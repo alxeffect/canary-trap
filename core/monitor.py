@@ -18,6 +18,9 @@ class HoneyFileEventHandler(FileSystemEventHandler):
     def __init__(self, alert_callback: Callable[[Path, str], None]):
         super().__init__()
         self.alert_callback = alert_callback
+        # Cooldown tracking to prevent duplicate events
+        self._last_event_time: dict[str, float] = {}
+        self._cooldown_seconds: float = 1.5
 
     def on_modified(self, event: FileSystemEvent) -> None:
         self._handle_event(event)
@@ -43,6 +46,15 @@ class HoneyFileEventHandler(FileSystemEventHandler):
         if file_path.name not in config.HONEY_FILES:
             return
 
+        # Cooldown check — suppress duplicate events
+        now = time.time()
+        key = f"{file_path}_{event.event_type}"
+        last = self._last_event_time.get(key, 0.0)
+
+        if now - last < self._cooldown_seconds:
+            return
+
+        self._last_event_time[key] = now
         self.alert_callback(file_path, event.event_type)
 
 
