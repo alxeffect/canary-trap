@@ -136,9 +136,9 @@ def handle_alert_async(
                     network_success = disable_network()
 
                     if network_success:
-                        on_result("[NUCLEAR] Network adapters disabled.")
+                        on_result("[NUCLEAR] Host isolated via Windows Firewall.")
                     else:
-                        on_result("[ERROR] Failed to disable network.")
+                        on_result("[ERROR] Failed to isolate host via Windows Firewall.")
             else:
                 on_result(f"[ERROR] Failed to terminate '{process_name}' (PID {pid}).")
 

@@ -362,15 +362,15 @@ class CanaryTrapApp(ctk.CTk):
         Disable network adapters.
         """
 
-        self.log("[NETWORK] Disabling network adapters...")
+        self.log("[NETWORK] Blocking outbound traffic...")
 
         def task() -> None:
             success = disable_network()
 
             if success:
-                self.log("[NETWORK] Network adapters disabled.")
+                self.log("[NETWORK] Host outbound traffic blocked.")
             else:
-                self.log("[ERROR] Failed to disable network.")
+                self.log("[ERROR] Failed to block outbound traffic.")
 
         threading.Thread(target=task, daemon=True).start()
 
@@ -379,15 +379,15 @@ class CanaryTrapApp(ctk.CTk):
         Restore network adapters.
         """
 
-        self.log("[NETWORK] Restoring network adapters...")
+        self.log("[NETWORK] Restoring host network connectivity...")
 
         def task() -> None:
             success = enable_network()
 
             if success:
-                self.log("[NETWORK] Network adapters restored.")
+                self.log("[NETWORK] Host network connectivity restored.")
             else:
-                self.log("[ERROR] Failed to restore network.")
+                self.log("[ERROR] Failed to restore host network connectivity.")
 
         threading.Thread(target=task, daemon=True).start()
 
