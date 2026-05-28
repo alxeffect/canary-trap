@@ -1,13 +1,21 @@
 from __future__ import annotations
 
 import ctypes
+import platform
+import subprocess
 import threading
 from pathlib import Path
 from typing import Callable, Optional, Tuple
 
 import psutil
+
 import config
 from core.threatintel import get_process_connections, query_ip_intel, get_all_suspicious_connections
+
+POWERSHELL_PATH = "powershell.exe"
+
+# Store disabled adapters
+_DISABLED_ADAPTERS: list[str] = []
 
 
 def find_process_using_file(target_file: Path) -> Optional[Tuple[int, str]]:
@@ -122,3 +130,113 @@ def handle_alert_async(
 
     thread = threading.Thread(target=_task, daemon=True)
     thread.start()
+
+
+def disable_network() -> bool:
+    """
+    Disable active physical network adapters
+    and remember which were disabled.
+    """
+
+    global _DISABLED_ADAPTERS
+    _DISABLED_ADAPTERS.clear()
+
+    if platform.system() != "Windows":
+        return False
+
+    try:
+        # Get active physical adapters
+        get_command = r"""
+        Get-NetAdapter |
+        Where-Object {
+            $_.Status -eq 'Up' -and
+            $_.HardwareInterface -eq $true
+        } |
+        Select-Object -ExpandProperty Name
+        """
+
+        result = subprocess.run(
+            [POWERSHELL_PATH, "-Command", get_command],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="ignore"
+        )
+
+        adapter_names = [
+            line.strip()
+            for line in result.stdout.splitlines()
+            if line.strip()
+        ]
+
+        if not adapter_names:
+            return False
+
+        _DISABLED_ADAPTERS = adapter_names.copy()
+
+        # Disable only detected adapters
+        for adapter in adapter_names:
+            disable_command = (
+                f'Disable-NetAdapter -Name "{adapter}" -Confirm:$false'
+            )
+
+            subprocess.run(
+                [POWERSHELL_PATH, "-Command", disable_command],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="ignore"
+            )
+
+        return True
+
+    except Exception as e:
+        print(f"[ERROR] disable_network failed: {e}")
+        return False
+
+
+def enable_network() -> bool:
+    """
+    Re-enable ONLY adapters previously disabled.
+    """
+
+    global _DISABLED_ADAPTERS
+
+    if platform.system() != "Windows":
+        return False
+
+    if not _DISABLED_ADAPTERS:
+        print("[INFO] No adapters stored for re-enable.")
+        return False
+
+    success = False
+
+    try:
+        for adapter in _DISABLED_ADAPTERS:
+
+            enable_command = (
+                f'Enable-NetAdapter -Name "{adapter}" -Confirm:$false'
+            )
+
+            result = subprocess.run(
+                [POWERSHELL_PATH, "-Command", enable_command],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="ignore"
+            )
+
+            if result.returncode == 0:
+                print(f"[INFO] Re-enabled adapter: {adapter}")
+                success = True
+            else:
+                print(f"[ERROR] Failed enabling: {adapter}")
+                print(result.stderr)
+
+        _DISABLED_ADAPTERS.clear()
+
+        return success
+
+    except Exception as e:
+        print(f"[ERROR] enable_network failed: {e}")
+        return False
