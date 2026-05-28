@@ -359,10 +359,10 @@ class CanaryTrapApp(ctk.CTk):
 
     def disable_network_action(self) -> None:
         """
-        Disable network adapters.
+        Isolate host.
         """
 
-        self.log("[NETWORK] Blocking outbound traffic...")
+        self.log("[NETWORK] Applying host isolation...")
 
         def task() -> None:
             success = disable_network()
@@ -376,7 +376,7 @@ class CanaryTrapApp(ctk.CTk):
 
     def enable_network_action(self) -> None:
         """
-        Restore network adapters.
+        Restore host network connectivity.
         """
 
         self.log("[NETWORK] Restoring host network connectivity...")
@@ -453,12 +453,12 @@ class CanaryTrapApp(ctk.CTk):
 
                 if success:
                     self.log(
-                        "[NUCLEAR] Network adapters disabled."
+                        "[NUCLEAR] Host outbound traffic blocked."
                     )
 
                 else:
                     self.log(
-                        "[ERROR] Failed to disable network."
+                        "[ERROR] Failed to block outbound traffic."
                     )
 
         except (

@@ -17,9 +17,6 @@ POWERSHELL_PATH = "powershell.exe"
 # Windows constant to hide console windows
 CREATE_NO_WINDOW = 0x08000000
 
-# Store disabled adapters
-_DISABLED_ADAPTERS: list[str] = []
-
 
 def find_process_using_file(target_file: Path) -> Optional[Tuple[int, str]]:
     """
