@@ -17,6 +17,9 @@ POWERSHELL_PATH = "powershell.exe"
 # Windows constant to hide console windows
 CREATE_NO_WINDOW = 0x08000000
 
+# Prevent duplicate handling of the same process
+ACTIVE_RESPONSE_PIDS: set[int] = set()
+
 
 def find_process_using_file(target_file: Path) -> Optional[Tuple[int, str]]:
     """
@@ -50,15 +53,31 @@ def is_process_safe(process_name: str) -> bool:
 
 def kill_process(pid: int) -> bool:
     """
-    Terminate suspicious process.
+    Forcefully terminate suspicious process.
+    Prevent self-termination.
     """
 
     try:
-        proc = psutil.Process(pid)
-        proc.terminate()
-        proc.wait(timeout=3)
+
+        current_pid = psutil.Process().pid
+
+        # Prevent killing Canary-Trap itself
+        if pid == current_pid:
+            return False
+
+        process = psutil.Process(pid)
+
+        process.kill()
+
+        process.wait(timeout=3)
+
         return True
-    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.TimeoutExpired):
+
+    except (
+        psutil.NoSuchProcess,
+        psutil.AccessDenied,
+        psutil.TimeoutExpired,
+    ):
         return False
 
 
@@ -112,6 +131,11 @@ def handle_alert_async(
             return
 
         pid, process_name = process_info
+        # Prevent duplicate response for the same PID
+        if pid in ACTIVE_RESPONSE_PIDS:
+            return
+
+        ACTIVE_RESPONSE_PIDS.add(pid)
         on_result(f"[INFO] Process identified: {process_name} (PID {pid})")
 
         if is_process_safe(process_name):
@@ -138,6 +162,9 @@ def handle_alert_async(
                         on_result("[ERROR] Failed to isolate host via Windows Firewall.")
             else:
                 on_result(f"[ERROR] Failed to terminate '{process_name}' (PID {pid}).")
+
+        # Cleanup PID lock
+        ACTIVE_RESPONSE_PIDS.discard(pid)
 
     thread = threading.Thread(target=_task, daemon=True)
     thread.start()

@@ -3,6 +3,7 @@ from __future__ import annotations
 import threading
 from pathlib import Path
 from typing import Optional
+from datetime import datetime
 
 import customtkinter as ctk
 from tkinter import StringVar
@@ -220,7 +221,8 @@ class CanaryTrapApp(ctk.CTk):
 
     def log(self, message: str) -> None:
         """
-        Append colored message to GUI log box.
+        Append colored message to GUI log box
+        and save logs to file.
         """
 
         def append() -> None:
@@ -244,13 +246,41 @@ class CanaryTrapApp(ctk.CTk):
             elif "[ERROR]" in upper:
                 tag = "error"
 
+            # Timestamp
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            formatted_message = f"[{timestamp}] {message}"
+
+            # =========================
+            # GUI LOG
+            # =========================
+
             self.log_textbox.insert(
                 "end",
-                f"{message}\n",
+                f"{formatted_message}\n",
                 tag,
             )
 
             self.log_textbox.see("end")
+
+            # =========================
+            # FILE LOG
+            # =========================
+
+            try:
+
+                with open(
+                        config.LOG_FILE,
+                        "a",
+                        encoding="utf-8",
+                ) as log_file:
+
+                    log_file.write(
+                        f"{formatted_message}\n"
+                    )
+
+            except Exception:
+                pass
 
         self.after(0, append)
 

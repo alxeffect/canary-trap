@@ -1,0 +1,52 @@
+[2026-05-28 19:21:32] [SYSTEM] Canary-Trap GUI initialized.
+[2026-05-28 19:21:34] [SYSTEM] Monitoring started.
+[2026-05-28 19:21:47] [ALERT] ACCESSED detected on: private_keys_backup.pem
+[2026-05-28 19:21:47] [INFO] Process identified: explorer.exe (PID 20672)
+[2026-05-28 19:21:47] [INFO] Process 'explorer.exe' is whitelisted. No action taken.
+[2026-05-28 19:22:02] [ALERT] ACCESSED detected on: client_database_passwords.txt
+[2026-05-28 19:22:02] [INFO] Process identified: Notepad.exe (PID 24548)
+[2026-05-28 19:22:02] [INFO] Specific process has no network. Scanning system for suspicious connections...
+[2026-05-28 19:22:02] [NETWORK] Analyzing IP: 142.251.98.17
+[2026-05-28 19:22:03]   ↳ Alert: IP 142.251.98.17 originates from United States (ISP: Google LLC)
+[2026-05-28 19:22:03] [NETWORK] Analyzing IP: 142.250.147.188
+[2026-05-28 19:22:03]   ↳ Alert: IP 142.250.147.188 originates from United States (ISP: Google LLC)
+[2026-05-28 19:22:03] [NETWORK] Analyzing IP: 170.72.250.85
+[2026-05-28 19:22:03]   ↳ Alert: IP 170.72.250.85 originates from United States (ISP: Amazon.com, Inc.)
+[2026-05-28 19:22:03] [ACTION] Process 'Notepad.exe' (PID 24548) terminated successfully.
+[2026-05-28 19:22:06] [SYSTEM] Response mode changed to: Detection Only
+[2026-05-28 19:22:09] [ALERT] ACCESSED detected on: client_database_passwords.txt
+[2026-05-28 19:22:09] [INFO] Process identified: Notepad.exe (PID 5500)
+[2026-05-28 19:22:09] [ALERT] ACCESSED detected on: vpn_access_tokens.txt
+[2026-05-28 19:22:09] [INFO] Process identified: Notepad.exe (PID 5500)
+[2026-05-28 19:22:24] [ALERT] MODIFIED detected on: vpn_access_tokens.txt
+[2026-05-28 19:22:24] [INFO] Process identified: Notepad.exe (PID 5500)
+[2026-05-28 19:22:28] [SYSTEM] Response mode changed to: Kill Process
+[2026-05-28 19:22:28] [ACTIVE RESPONSE] Terminating tracked threat process: Notepad.exe (PID 5500)
+[2026-05-28 19:22:28] [ACTION] Process 'Notepad.exe' (PID 5500) terminated immediately.
+[2026-05-28 19:22:32] [ALERT] ACCESSED detected on: client_database_passwords.txt
+[2026-05-28 19:22:32] [INFO] Process identified: Notepad.exe (PID 23160)
+[2026-05-28 19:22:32] [INFO] Specific process has no network. Scanning system for suspicious connections...
+[2026-05-28 19:22:32] [NETWORK] Analyzing IP: 142.251.98.17
+[2026-05-28 19:22:33]   ↳ Alert: IP 142.251.98.17 originates from United States (ISP: Google LLC)
+[2026-05-28 19:22:33] [NETWORK] Analyzing IP: 18.244.146.47
+[2026-05-28 19:22:33]   ↳ Alert: IP 18.244.146.47 originates from Poland (ISP: Amazon.com, Inc.)
+[2026-05-28 19:22:33] [NETWORK] Analyzing IP: 208.95.112.1
+[2026-05-28 19:22:33]   ↳ Alert: IP 208.95.112.1 originates from United States (ISP: Total Uptime Technologies, LLC)
+[2026-05-28 19:22:33] [ACTION] Process 'Notepad.exe' (PID 23160) terminated successfully.
+[2026-05-28 19:22:55] [SYSTEM] Response mode changed to: Nuclear Mode
+[2026-05-28 19:22:55] [INFO] Tracked threat process no longer exists.
+[2026-05-28 19:22:59] [ALERT] ACCESSED detected on: client_database_passwords.txt
+[2026-05-28 19:22:59] [INFO] Process identified: Notepad.exe (PID 29156)
+[2026-05-28 19:22:59] [INFO] Specific process has no network. Scanning system for suspicious connections...
+[2026-05-28 19:22:59] [NETWORK] Analyzing IP: 208.95.112.1
+[2026-05-28 19:23:00]   ↳ Alert: IP 208.95.112.1 originates from United States (ISP: Total Uptime Technologies, LLC)
+[2026-05-28 19:23:00] [NETWORK] Analyzing IP: 142.251.98.17
+[2026-05-28 19:23:00]   ↳ Alert: IP 142.251.98.17 originates from United States (ISP: Google LLC)
+[2026-05-28 19:23:00] [NETWORK] Analyzing IP: 18.244.146.47
+[2026-05-28 19:23:00]   ↳ Alert: IP 18.244.146.47 originates from Poland (ISP: Amazon.com, Inc.)
+[2026-05-28 19:23:00] [ACTION] Process 'Notepad.exe' (PID 29156) terminated successfully.
+[2026-05-28 19:23:00] [NUCLEAR] Emergency network isolation triggered.
+[2026-05-28 19:23:04] [NUCLEAR] Host isolated via Windows Firewall.
+[2026-05-28 19:23:12] [NETWORK] Restoring host network connectivity...
+[2026-05-28 19:23:17] [NETWORK] Host network connectivity restored.
+[2026-05-28 19:25:00] [SYSTEM] Monitoring stopped.

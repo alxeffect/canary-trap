@@ -32,13 +32,12 @@ else:
 # =========================================================
 
 LOGS_DIR = BASE_DIR / "logs"
-DATA_DIR = BASE_DIR / "data"
 CORE_DIR = BASE_DIR / "core"
 GUI_DIR = BASE_DIR / "gui"
 HONEYPOT_DIR = BASE_DIR / "honeypot_files"
 
 # Create required directories automatically
-for directory in [LOGS_DIR, DATA_DIR, HONEYPOT_DIR]:
+for directory in [LOGS_DIR, HONEYPOT_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
 # =========================================================
@@ -118,6 +117,7 @@ SAFE_PROCESSES: set[str] = {
     "canarytrap.exe",
     "canary-trap.exe",
     "canary_trap.exe",
+    "main.exe",
 }
 
 # =========================================================
