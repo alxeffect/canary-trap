@@ -13,12 +13,23 @@ This file contains:
 """
 
 from pathlib import Path
+import sys
+
+
+# =========================================================
+# BASE DIRECTORY
+# =========================================================
+
+if getattr(sys, "frozen", False):
+    # Running as PyInstaller EXE
+    BASE_DIR = Path(sys.executable).resolve().parent
+else:
+    # Running as normal Python script
+    BASE_DIR = Path(__file__).resolve().parent
 
 # =========================================================
 # PROJECT PATHS
 # =========================================================
-
-BASE_DIR = Path(__file__).resolve().parent
 
 LOGS_DIR = BASE_DIR / "logs"
 DATA_DIR = BASE_DIR / "data"

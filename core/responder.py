@@ -14,6 +14,9 @@ from core.threatintel import get_process_connections, query_ip_intel, get_all_su
 
 POWERSHELL_PATH = "powershell.exe"
 
+# Windows constant to hide console windows
+CREATE_NO_WINDOW = 0x08000000
+
 # Store disabled adapters
 _DISABLED_ADAPTERS: list[str] = []
 
@@ -145,109 +148,63 @@ def handle_alert_async(
 
 def disable_network() -> bool:
     """
-    Disable active physical network adapters
-    and remember which were disabled.
+    Block all outbound network traffic using Windows Firewall.
+    Safer and more stable than disabling adapters.
     """
-
-    global _DISABLED_ADAPTERS
-    _DISABLED_ADAPTERS.clear()
 
     if platform.system() != "Windows":
         return False
 
     try:
-        # Get active physical adapters
-        get_command = r"""
-        Get-NetAdapter |
-        Where-Object {
-            $_.Status -eq 'Up' -and
-            $_.HardwareInterface -eq $true
-        } |
-        Select-Object -ExpandProperty Name
-        """
+
+        command = (
+            'New-NetFirewallRule '
+            '-DisplayName "CanaryTrapBlockOutbound" '
+            '-Direction Outbound '
+            '-Action Block'
+        )
 
         result = subprocess.run(
-            [POWERSHELL_PATH, "-Command", get_command],
+            [POWERSHELL_PATH, "-Command", command],
             capture_output=True,
             text=True,
             encoding="utf-8",
-            errors="ignore"
+            errors="ignore",
+            creationflags=CREATE_NO_WINDOW,
         )
 
-        adapter_names = [
-            line.strip()
-            for line in result.stdout.splitlines()
-            if line.strip()
-        ]
+        return result.returncode == 0
 
-        if not adapter_names:
-            return False
-
-        _DISABLED_ADAPTERS = adapter_names.copy()
-
-        # Disable only detected adapters
-        for adapter in adapter_names:
-            disable_command = (
-                f'Disable-NetAdapter -Name "{adapter}" -Confirm:$false'
-            )
-
-            subprocess.run(
-                [POWERSHELL_PATH, "-Command", disable_command],
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="ignore"
-            )
-
-        return True
-
-    except Exception as e:
-        print(f"[ERROR] disable_network failed: {e}")
+    except Exception:
         return False
 
 
 def enable_network() -> bool:
     """
-    Re-enable ONLY adapters previously disabled.
+    Remove firewall rule created by Canary-Trap.
+    Restore outbound traffic.
     """
-
-    global _DISABLED_ADAPTERS
 
     if platform.system() != "Windows":
         return False
 
-    if not _DISABLED_ADAPTERS:
-        print("[INFO] No adapters stored for re-enable.")
-        return False
-
-    success = False
-
     try:
-        for adapter in _DISABLED_ADAPTERS:
 
-            enable_command = (
-                f'Enable-NetAdapter -Name "{adapter}" -Confirm:$false'
-            )
+        command = (
+            'Remove-NetFirewallRule '
+            '-DisplayName "CanaryTrapBlockOutbound"'
+        )
 
-            result = subprocess.run(
-                [POWERSHELL_PATH, "-Command", enable_command],
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="ignore"
-            )
+        result = subprocess.run(
+            [POWERSHELL_PATH, "-Command", command],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="ignore",
+            creationflags=CREATE_NO_WINDOW,
+        )
 
-            if result.returncode == 0:
-                print(f"[INFO] Re-enabled adapter: {adapter}")
-                success = True
-            else:
-                print(f"[ERROR] Failed enabling: {adapter}")
-                print(result.stderr)
+        return result.returncode == 0
 
-        _DISABLED_ADAPTERS.clear()
-
-        return success
-
-    except Exception as e:
-        print(f"[ERROR] enable_network failed: {e}")
+    except Exception:
         return False
